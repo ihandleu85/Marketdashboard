@@ -55,6 +55,7 @@ class StockPortfolio:
             st.warning(f"{ticker} not found in portfolio.")
             return False
 
+    @st.cache_data
     def get_current_price(self, ticker):
         try:
             stock = yf.Ticker(ticker)
@@ -90,6 +91,7 @@ class StockPortfolio:
         df = pd.DataFrame(data)
         return total_value, total_profit, df
 
+    @st.cache_data
     def generate_signals(self, ticker):
         try:
             stock = yf.Ticker(ticker)
@@ -160,14 +162,17 @@ if not df.empty:
             'Current Price': '${:.2f}',
             'Value': '${:.2f}',
             'Profit/Loss': '${:.2f}'
-        }),
+        }).applymap(
+            lambda x: 'color: green' if isinstance(x, (int, float)) and x >= 0 else 'color: red',
+            subset=['Profit/Loss']
+        ),
         use_container_width=True
     )
     # Add Remove Stock Buttons
     for ticker in portfolio.holdings:
         if st.button(f"Remove {ticker}", key=f"remove_{ticker}"):
             portfolio.remove_stock(ticker)
-            st.experimental_rerun()
+            st.rerun()  # Updated from st.experimental_rerun
 else:
     st.write("Portfolio is empty.")
 
